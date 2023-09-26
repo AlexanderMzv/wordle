@@ -89,7 +89,13 @@ function drawAttempt(row, attempt, isCurrent) {
   for (let i = 0; i < 5; i++) {
     const cell = row.children[i];
     cell.textContent = attempt[i];
-    cell.style.backgroundColor = isCurrent ? BLACK : getBgColor(attempt, i);
+    if (isCurrent) {
+      cell.style.borderColor = attempt[i] ? "#7b7f98" : "#414458";
+      cell.style.backgroundColor = BLACK;
+    } else {
+      cell.style.borderColor = getBgColor(attempt, i);
+      cell.style.backgroundColor = getBgColor(attempt, i);
+    }
   }
 }
 
@@ -115,6 +121,7 @@ function buildKeyboard() {
 
 function buildButton(letter, row) {
   const button = document.createElement("button");
+  button.tabIndex = -1;
   button.className = "button";
   button.textContent = letter;
   button.style.backgroundColor = LIGHTGRAY;
@@ -166,6 +173,7 @@ function updateKeyboard() {
 
   for (let [key, button] of keyboardButtons) {
     button.style.backgroundColor = bestColors.get(key);
+    button.style.borderColor = bestColors.get(key);
   }
 }
 
