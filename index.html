@@ -10,14 +10,27 @@
             font-family: sans-serif;
             text-align: center;
             text-transform: uppercase;
+            margin: 0;
+            padding: 0;
+        }
+        body, html, #screen {
+            height: 100vh;
+            width: 100%;
+        }
+
+        #screen {
+            display: flex;
+            flex-direction: column;
         }
 
         h1 {
+            flex: none;
             font-size: 42px;
         }
 
         #grid {
             display: flex;
+            flex: 1 1 auto;
             flex-direction: column;
             align-items: center;
         }
@@ -38,11 +51,31 @@
             margin: 5px;
             background: #191a24;
         }
+
+        #keyboard {
+            flex: none;
+            padding: 20px;
+        }
+
+        .button {
+            text-transform: uppercase;
+            height: 60px;
+            padding: 16px;
+            margin: 3px;
+            border-radius: 5px;
+            border: none;
+            font-size: 16px;
+            color: white;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
-    <h1>Wordle</h1>
-    <div id="grid"></div>
+    <div id="screen">
+        <h1>Wordle</h1>
+        <div id="grid"></div>
+        <div id="keyboard"></div>
+    </div>
 
     <script src="index.js"></script>
 </body>

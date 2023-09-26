@@ -18,11 +18,6 @@ const secret = wordList[randomIndex];
 let currentAttempt = "";
 const history = [];
 
-const grid = document.getElementById("grid");
-
-buildGrid();
-updateGrid();
-
 window.addEventListener("keydown", handleKeyDown);
 
 function handleKeyDown(e) {
@@ -75,11 +70,17 @@ function updateGrid() {
   drawAttempt(row, currentAttempt, true);
 }
 
+const BLACK = "#191a24";
+const GRAY = "#3d4054";
+const LIGHTGRAY = "#656780";
+const GREEN = "#79b851";
+const YELLOW = "#f3c237";
+
 function drawAttempt(row, attempt, isCurrent) {
   for (let i = 0; i < 5; i++) {
     const cell = row.children[i];
     cell.textContent = attempt[i];
-    cell.style.backgroundColor = isCurrent ? "#191a24" : getBgColor(attempt, i);
+    cell.style.backgroundColor = isCurrent ? BLACK : getBgColor(attempt, i);
   }
 }
 
@@ -88,11 +89,51 @@ function getBgColor(attempt, i) {
   const attemptLetter = attempt[i];
 
   if (secret.indexOf(attemptLetter) === -1) {
-    return "#3d4054";
+    return GRAY;
   }
   if (correctLetter === attemptLetter) {
-    return "#79b851";
+    return GREEN;
   }
 
-  return "#f3c237";
+  return YELLOW;
 }
+
+function buildKeyboard() {
+  buildKeyboardRow("qwertyuiop", false);
+  buildKeyboardRow("asdfghjkl", false);
+  buildKeyboardRow("zxcvbnm", true);
+}
+
+function buildButton(letter, row) {
+  const button = document.createElement("button");
+  button.className = "button";
+  button.textContent = letter;
+  button.style.backgroundColor = LIGHTGRAY;
+  button.onclick = () => {
+    // todo
+  };
+  row.appendChild(button);
+}
+
+function buildKeyboardRow(letters, isLastRow) {
+  const row = document.createElement("div");
+
+  if (isLastRow) {
+    buildButton("enter", row);
+  }
+  for (let letter of letters) {
+    buildButton(letter, row);
+  }
+  if (isLastRow) {
+    buildButton("backspace", row);
+  }
+
+  keyboard.appendChild(row);
+}
+
+const grid = document.getElementById("grid");
+const keyboard = document.getElementById("keyboard");
+
+buildGrid();
+buildKeyboard();
+updateGrid();
