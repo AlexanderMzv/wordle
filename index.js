@@ -18,8 +18,6 @@ const secret = wordList[randomIndex];
 let currentAttempt = "";
 const history = [];
 
-window.addEventListener("keydown", handleKeyDown);
-
 function handleKeyDown(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) {
     return;
@@ -40,6 +38,7 @@ function handleKey(key) {
     }
     history.push(currentAttempt);
     currentAttempt = "";
+    updateKeyboard();
   } else if (letter === "backspace") {
     currentAttempt = currentAttempt.slice(0, currentAttempt.length - 1);
   } else if (/^[a-z]$/.test(letter)) {
@@ -115,6 +114,7 @@ function buildButton(letter, row) {
   button.onclick = () => {
     handleKey(letter);
   };
+  keyboardButtons.set(letter, button);
   row.appendChild(button);
 }
 
@@ -134,9 +134,41 @@ function buildKeyboardRow(letters, isLastRow) {
   keyboard.appendChild(row);
 }
 
+function getBetterColor(a, b) {
+  if (a === GREEN || b === GREEN) {
+    return GREEN;
+  }
+  if (a === YELLOW || b === YELLOW) {
+    return YELLOW;
+  }
+
+  return GRAY;
+}
+
+function updateKeyboard() {
+  const bestColors = new Map();
+
+  for (let attempt of history) {
+    for (let i = 0; i < attempt.length; i++) {
+      const color = getBgColor(attempt, i);
+      const key = attempt[i];
+      const bestColor = bestColors.get(key);
+      bestColors.set(key, getBetterColor(color, bestColor));
+    }
+  }
+
+  for (let [key, button] of keyboardButtons) {
+    button.style.backgroundColor = bestColors.get(key);
+  }
+}
+
 const grid = document.getElementById("grid");
 const keyboard = document.getElementById("keyboard");
+const keyboardButtons = new Map();
 
 buildGrid();
 buildKeyboard();
 updateGrid();
+updateKeyboard();
+
+window.addEventListener("keydown", handleKeyDown);
