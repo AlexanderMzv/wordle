@@ -26,6 +26,10 @@ updateGrid();
 window.addEventListener("keydown", handleKeyDown);
 
 function handleKeyDown(e) {
+  if (e.ctrlKey || e.metaKey || e.altKey) {
+    return;
+  }
+
   const letter = e.key.toLowerCase();
 
   if (letter === "enter") {
@@ -40,7 +44,7 @@ function handleKeyDown(e) {
     currentAttempt = "";
   } else if (letter === "backspace") {
     currentAttempt = currentAttempt.slice(0, currentAttempt.length - 1);
-  } else if (/[a-z]/.test(letter) && letter.length === 1) {
+  } else if (/^[a-z]$/.test(letter)) {
     if (currentAttempt.length < 5) {
       currentAttempt += letter;
     }
