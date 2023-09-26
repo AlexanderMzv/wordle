@@ -64,7 +64,12 @@ function buildGrid() {
     for (let j = 0; j < 5; j++) {
       const cell = document.createElement("div");
       cell.className = "cell";
-      cell.textContent = "";
+      const front = document.createElement("div");
+      front.className = "front";
+      const back = document.createElement("div");
+      back.className = "back";
+      cell.appendChild(front);
+      cell.appendChild(back);
       row.appendChild(cell);
     }
     grid.appendChild(row);
@@ -72,12 +77,16 @@ function buildGrid() {
 }
 
 function updateGrid() {
-  let row = grid.firstChild;
-  for (let attempt of history) {
-    drawAttempt(row, attempt, false);
-    row = row.nextSibling;
+  for (let i = 0; i < 6; i++) {
+    let row = grid.children[i];
+    if (i < history.length) {
+      drawAttempt(row, history[i], true);
+    } else if (i === history.length) {
+      drawAttempt(row, currentAttempt, false);
+    } else {
+      drawAttempt(row, "", false);
+    }
   }
-  drawAttempt(row, currentAttempt, true);
 }
 
 const BLACK = "#191a24";
@@ -86,19 +95,28 @@ const LIGHTGRAY = "#656780";
 const GREEN = "#79b851";
 const YELLOW = "#f3c237";
 
-function drawAttempt(row, attempt, isCurrent) {
+function drawAttempt(row, attempt, solved) {
   for (let i = 0; i < 5; i++) {
     const cell = row.children[i];
-    cell.textContent = attempt[i];
+    const front = cell.children[0];
+    const back = cell.children[1];
+
+    front.textContent = attempt[i];
+    back.textContent = attempt[i];
+
     if (!attempt[i]) {
       clearAnimation(cell);
     }
-    if (isCurrent) {
-      cell.style.borderColor = attempt[i] ? "#7b7f98" : "#414458";
-      cell.style.backgroundColor = BLACK;
+    front.style.borderColor = attempt[i] ? "#7b7f98" : "#414458";
+    front.style.backgroundColor = BLACK;
+
+    back.style.borderColor = getBgColor(attempt, i);
+    back.style.backgroundColor = getBgColor(attempt, i);
+
+    if (solved) {
+      cell.classList.add("solved");
     } else {
-      cell.style.borderColor = getBgColor(attempt, i);
-      cell.style.backgroundColor = getBgColor(attempt, i);
+      cell.classList.remove("solved");
     }
   }
 }
