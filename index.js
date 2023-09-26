@@ -24,8 +24,11 @@ function handleKeyDown(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) {
     return;
   }
+  handleKey(e.key);
+}
 
-  const letter = e.key.toLowerCase();
+function handleKey(key) {
+  const letter = key.toLowerCase();
 
   if (letter === "enter") {
     if (currentAttempt.length < 5) {
@@ -110,7 +113,7 @@ function buildButton(letter, row) {
   button.textContent = letter;
   button.style.backgroundColor = LIGHTGRAY;
   button.onclick = () => {
-    // todo
+    handleKey(letter);
   };
   row.appendChild(button);
 }
