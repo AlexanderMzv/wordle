@@ -12,11 +12,10 @@ const wordList = [
   "crabs",
 ];
 
-const randomIndex = Math.floor(Math.random() * wordList.length);
-const secret = wordList[randomIndex];
+const secret = wordList[0];
 
 let currentAttempt = "";
-const history = [];
+let history = [];
 
 function handleKeyDown(e) {
   if (e.ctrlKey || e.metaKey || e.altKey) {
@@ -46,6 +45,7 @@ function handleKey(key) {
     history.push(currentAttempt);
     currentAttempt = "";
     updateKeyboard();
+    saveGame();
   } else if (letter === "backspace") {
     currentAttempt = currentAttempt.slice(0, currentAttempt.length - 1);
   } else if (/^[a-z]$/.test(letter)) {
@@ -169,10 +169,35 @@ function updateKeyboard() {
   }
 }
 
+function loadGame() {
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem("data"));
+  } catch (error) {}
+
+  if (data != null) {
+    if (data.secret === secret) {
+      history = data.history;
+    }
+  }
+}
+
+function saveGame() {
+  const data = JSON.stringify({
+    secret,
+    history,
+  });
+
+  try {
+    localStorage.setItem("data", data);
+  } catch (error) {}
+}
+
 const grid = document.getElementById("grid");
 const keyboard = document.getElementById("keyboard");
 const keyboardButtons = new Map();
 
+loadGame();
 buildGrid();
 buildKeyboard();
 updateGrid();
