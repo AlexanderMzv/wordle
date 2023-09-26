@@ -26,6 +26,10 @@ function handleKeyDown(e) {
 }
 
 function handleKey(key) {
+  if (history.length === 6) {
+    return;
+  }
+
   const letter = key.toLowerCase();
 
   if (letter === "enter") {
@@ -35,6 +39,9 @@ function handleKey(key) {
     if (!wordList.includes(currentAttempt)) {
       alert("Not in my thesaurus");
       return;
+    }
+    if (history.length === 5 && currentAttempt !== secret) {
+      alert(secret);
     }
     history.push(currentAttempt);
     currentAttempt = "";
