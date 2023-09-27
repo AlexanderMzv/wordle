@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
+import { KeyContext } from "./context";
 
 const BLACK = "#191a24";
 const GRAY = "#3d4054";
@@ -79,9 +80,11 @@ export default function Wordle() {
 
   return (
     <div id="screen">
-      <h1>Wordle</h1>
-      <Grid history={history} currentAttempt={currentAttempt} />
-      <Keyboard onKey={handleKey} />
+      <KeyContext.Provider value={handleKey}>
+        <h1>Wordle</h1>
+        <Grid history={history} currentAttempt={currentAttempt} />
+        <Keyboard />
+      </KeyContext.Provider>
     </div>
   );
 }
@@ -150,22 +153,22 @@ function Cell({ index, attempt, solved }) {
   );
 }
 
-function Keyboard({ onKey }) {
+function Keyboard() {
   return (
     <div id="keyboard">
-      <KeyboardRow letters="qwertyuiop" onKey={onKey} isLast={false} />
-      <KeyboardRow letters="asdfghjkl" onKey={onKey} isLast={false} />
-      <KeyboardRow letters="zxcvbnm" onKey={onKey} isLast />
+      <KeyboardRow letters="qwertyuiop" isLast={false} />
+      <KeyboardRow letters="asdfghjkl" isLast={false} />
+      <KeyboardRow letters="zxcvbnm" isLast />
     </div>
   );
 }
 
-function KeyboardRow({ letters, isLast, onKey }) {
+function KeyboardRow({ letters, isLast }) {
   const buttons = [];
 
   if (isLast) {
     buttons.push(
-      <Button key="enter" buttonKey="enter" onKey={onKey}>
+      <Button key="enter" buttonKey="enter">
         enter
       </Button>,
     );
@@ -173,7 +176,7 @@ function KeyboardRow({ letters, isLast, onKey }) {
 
   for (let letter of letters) {
     buttons.push(
-      <Button key={letter} buttonKey={letter} onKey={onKey}>
+      <Button key={letter} buttonKey={letter}>
         {letter}
       </Button>,
     );
@@ -181,7 +184,7 @@ function KeyboardRow({ letters, isLast, onKey }) {
 
   if (isLast) {
     buttons.push(
-      <Button key="backspace" buttonKey="backspace" onKey={onKey}>
+      <Button key="backspace" buttonKey="backspace">
         backspace
       </Button>,
     );
@@ -190,7 +193,9 @@ function KeyboardRow({ letters, isLast, onKey }) {
   return <div>{buttons}</div>;
 }
 
-function Button({ buttonKey, onKey, children }) {
+function Button({ buttonKey, children }) {
+  const onKey = useContext(KeyContext);
+
   return (
     <button
       tabIndex={-1}
