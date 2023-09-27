@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useRef } from "react";
 import { KeyContext } from "./context";
 
 const BLACK = "#191a24";
@@ -23,12 +23,27 @@ const secret = wordList[0];
 export default function Wordle() {
   const [history, setHistory] = useState([]);
   const [currentAttempt, setCurrentAttempt] = useState("");
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (loadedRef.current) return;
+
+    loadedRef.current = true;
+    const savedHistory = loadHistory();
+    if (savedHistory) {
+      setHistory(savedHistory);
+    }
+  });
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
+
+  useEffect(() => {
+    saveHistory(history);
+  }, [history]);
 
   function handleKeyDown(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) {
@@ -64,7 +79,6 @@ export default function Wordle() {
       setHistory([...history, currentAttempt]);
       setCurrentAttempt("");
       // todo: persistence
-      // saveGame();
       // pauseInput();
     } else if (letter === "backspace") {
       setCurrentAttempt(currentAttempt.slice(0, currentAttempt.length - 1));
@@ -208,6 +222,30 @@ function Button({ buttonKey, children }) {
       {children}
     </button>
   );
+}
+
+function loadHistory() {
+  let data;
+  try {
+    data = JSON.parse(localStorage.getItem("data"));
+  } catch (error) {}
+
+  if (data != null) {
+    if (data.secret === secret) {
+      return data.history;
+    }
+  }
+}
+
+function saveHistory(history) {
+  const data = JSON.stringify({
+    secret,
+    history,
+  });
+
+  try {
+    localStorage.setItem("data", data);
+  } catch (error) {}
 }
 
 function getBgColor(attempt, i) {
