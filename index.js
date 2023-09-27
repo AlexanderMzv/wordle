@@ -28,6 +28,9 @@ function handleKey(key) {
   if (history.length === 6) {
     return;
   }
+  if (isAnimating) {
+    return;
+  }
 
   const letter = key.toLowerCase();
 
@@ -46,6 +49,7 @@ function handleKey(key) {
     currentAttempt = "";
     updateKeyboard();
     saveGame();
+    pauseInput();
   } else if (letter === "backspace") {
     currentAttempt = currentAttempt.slice(0, currentAttempt.length - 1);
   } else if (/^[a-z]$/.test(letter)) {
@@ -55,6 +59,15 @@ function handleKey(key) {
     }
   }
   updateGrid();
+}
+
+let isAnimating = false;
+function pauseInput() {
+  if (isAnimating) throw Error("should never happen");
+  isAnimating = true;
+  setTimeout(() => {
+    isAnimating = false;
+  }, 2000);
 }
 
 function buildGrid() {
@@ -68,8 +81,13 @@ function buildGrid() {
       front.className = "front";
       const back = document.createElement("div");
       back.className = "back";
-      cell.appendChild(front);
-      cell.appendChild(back);
+      const surface = document.createElement("div");
+      surface.className = "surface";
+      surface.style.transitionDelay = j * 300 + "ms";
+
+      surface.appendChild(front);
+      surface.appendChild(back);
+      cell.appendChild(surface);
       row.appendChild(cell);
     }
     grid.appendChild(row);
@@ -98,8 +116,9 @@ const YELLOW = "#f3c237";
 function drawAttempt(row, attempt, solved) {
   for (let i = 0; i < 5; i++) {
     const cell = row.children[i];
-    const front = cell.children[0];
-    const back = cell.children[1];
+    const surface = cell.firstChild;
+    const front = surface.children[0];
+    const back = surface.children[1];
 
     front.textContent = attempt[i];
     back.textContent = attempt[i];

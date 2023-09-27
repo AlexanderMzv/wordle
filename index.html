@@ -42,47 +42,47 @@
         .cell {
             width: 75px;
             height: 75px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             font-size: 33px;
             font-weight: bold;
             margin: 4px;
             background: #191a24;
+            perspective: 1000px;
         }
 
-        .front {
+        .surface, .front, .back {
             width: 100%;
             height: 100%;
         }
 
-        .back {
+        .cell.solved .surface  {
+            transform: rotateX(180deg);
+        }
+
+        .cell .surface {
+            transition-duration: 800ms;
+            transform-style: preserve-3d;
+            position: relative;
             width: 100%;
             height: 100%;
         }
 
-        .cell > .front, .cell > .back {
+        .cell .front, .cell .back {
             border: 1px solid #414458;
-        }
+            backface-visibility: hidden;
+            position: absolute;
 
-        .cell > .front {
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
-        .cell > .back {
-            display: none;
+        .cell .front {
+            z-index: 2;
         }
 
-        .cell.solved > .front {
-            display: none;
-        }
-
-        .cell.solved > .back {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .cell .back {
+            z-index: 1;
+            transform: rotateX(180deg);
         }
 
         #keyboard {
