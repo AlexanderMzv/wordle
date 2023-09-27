@@ -1,5 +1,3 @@
-"use strict";
-
 const wordList = [
   "horse",
   "patio",

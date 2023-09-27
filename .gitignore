@@ -1,3 +1,5 @@
 /node_modules/
 /.idea/
 /wordle.iml
+/dist/
+/.parcel-cache/
