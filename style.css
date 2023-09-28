@@ -42,6 +42,11 @@ h1 {
     background: #191a24;
     perspective: 1000px;
 }
+.cell.filled:not(.solved) {
+    animation-name: press;
+    animation-duration: 150ms;
+    animation-timing-function: ease-out;
+}
 
 .surface, .front, .back {
     width: 100%;

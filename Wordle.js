@@ -2,8 +2,8 @@ import { useEffect, useState, useContext, useRef } from "react";
 import { KeyContext } from "./context";
 
 const BLACK = "#191a24";
-const GRAY = "#3d4054";
-const LIGHTGRAY = "#656780";
+const GREY = "#3d4054";
+const LIGHTGREY = "#656780";
 const GREEN = "#79b851";
 const YELLOW = "#f3c237";
 
@@ -21,18 +21,10 @@ const wordList = [
 const secret = wordList[0];
 
 export default function Wordle() {
-  const [history, setHistory] = useState([]);
-  const [currentAttempt, setCurrentAttempt] = useState("");
-  const loadedRef = useRef(false);
-
-  useEffect(() => {
-    if (loadedRef.current) return;
-
-    loadedRef.current = true;
-    const savedHistory = loadHistory();
-    if (savedHistory) {
-      setHistory(savedHistory);
-    }
+  let [currentAttempt, setCurrentAttempt] = useState("");
+  let [bestColors, setBestColors] = useState(() => new Map());
+  let [history, setHistory] = usePersistedHistory((h) => {
+    waitForAnimation(h);
   });
 
   useEffect(() => {
@@ -40,10 +32,6 @@ export default function Wordle() {
 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
-
-  useEffect(() => {
-    saveHistory(history);
-  }, [history]);
 
   function handleKeyDown(e) {
     if (e.ctrlKey || e.metaKey || e.altKey) {
@@ -58,10 +46,9 @@ export default function Wordle() {
       return;
     }
 
-    // todo
-    // if (isAnimating) {
-    //   return;
-    // }
+    if (animatingRef.current) {
+      return;
+    }
 
     const letter = key.toLowerCase();
 
@@ -76,20 +63,33 @@ export default function Wordle() {
       if (history.length === 5 && currentAttempt !== secret) {
         alert(secret);
       }
-      setHistory([...history, currentAttempt]);
+      const newHistory = [...history, currentAttempt];
+
+      setHistory(newHistory);
       setCurrentAttempt("");
-      // todo: persistence
-      // pauseInput();
+      waitForAnimation(newHistory);
     } else if (letter === "backspace") {
       setCurrentAttempt(currentAttempt.slice(0, currentAttempt.length - 1));
     } else if (/^[a-z]$/.test(letter)) {
-      console.log("currentAttempt", currentAttempt);
       if (currentAttempt.length < 5) {
         setCurrentAttempt(currentAttempt + letter);
-        // todo
-        // animatePress(currentAttempt.length - 1);
       }
     }
+  }
+
+  const animatingRef = useRef(false);
+
+  function waitForAnimation(nextHistory) {
+    if (animatingRef.current) {
+      throw Error("should never happen");
+    }
+
+    animatingRef.current = true;
+
+    setTimeout(() => {
+      animatingRef.current = false;
+      setBestColors(calculateBestColors(nextHistory));
+    }, 2000);
   }
 
   return (
@@ -97,7 +97,7 @@ export default function Wordle() {
       <KeyContext.Provider value={handleKey}>
         <h1>Wordle</h1>
         <Grid history={history} currentAttempt={currentAttempt} />
-        <Keyboard />
+        <Keyboard bestColors={bestColors} />
       </KeyContext.Provider>
     </div>
   );
@@ -112,7 +112,7 @@ function Grid({ history, currentAttempt }) {
     } else if (i === history.length) {
       rows.push(<Attempt key={i} attempt={currentAttempt} solved={false} />);
     } else {
-      rows.push(<Attempt key={i} attempt={""} solved={false} />);
+      rows.push(<Attempt key={i} attempt="" solved={false} />);
     }
   }
 
@@ -136,18 +136,20 @@ function Cell({ index, attempt, solved }) {
 
   if (hasLetter) {
     content = attempt[index];
-  } else {
-    // todo
-    // clearAnimation(cell);
   }
 
   return (
-    <div className={"cell " + (solved ? "solved" : "")}>
+    <div
+      className={
+        "cell " + (solved ? "solved" : "") + (hasLetter ? " filled" : "")
+      }
+    >
       <div className="surface" style={{ transitionDelay: index * 300 + "ms" }}>
         <div
           className="front"
           style={{
             backgroundColor: BLACK,
+            // todo вынести в переменные
             borderColor: hasLetter ? "#7b7f98" : "#414458",
           }}
         >
@@ -167,17 +169,21 @@ function Cell({ index, attempt, solved }) {
   );
 }
 
-function Keyboard() {
+function Keyboard({ bestColors }) {
   return (
     <div id="keyboard">
-      <KeyboardRow letters="qwertyuiop" isLast={false} />
-      <KeyboardRow letters="asdfghjkl" isLast={false} />
-      <KeyboardRow letters="zxcvbnm" isLast />
+      <KeyboardRow
+        bestColors={bestColors}
+        letters="qwertyuiop"
+        isLast={false}
+      />
+      <KeyboardRow bestColors={bestColors} letters="asdfghjkl" isLast={false} />
+      <KeyboardRow bestColors={bestColors} letters="zxcvbnm" isLast />
     </div>
   );
 }
 
-function KeyboardRow({ letters, isLast }) {
+function KeyboardRow({ letters, isLast, bestColors }) {
   const buttons = [];
 
   if (isLast) {
@@ -190,7 +196,7 @@ function KeyboardRow({ letters, isLast }) {
 
   for (let letter of letters) {
     buttons.push(
-      <Button key={letter} buttonKey={letter}>
+      <Button key={letter} color={bestColors.get(letter)} buttonKey={letter}>
         {letter}
       </Button>,
     );
@@ -207,14 +213,14 @@ function KeyboardRow({ letters, isLast }) {
   return <div>{buttons}</div>;
 }
 
-function Button({ buttonKey, children }) {
+function Button({ buttonKey, color = LIGHTGREY, children }) {
   const onKey = useContext(KeyContext);
 
   return (
     <button
       tabIndex={-1}
       className="button"
-      style={{ backgroundColor: LIGHTGRAY }}
+      style={{ backgroundColor: color, borderColor: color }}
       onClick={() => {
         onKey(buttonKey);
       }}
@@ -248,16 +254,65 @@ function saveHistory(history) {
   } catch (error) {}
 }
 
+function usePersistedHistory(onLoad) {
+  const [history, setHistory] = useState([]);
+  const loadedRef = useRef(false);
+
+  useEffect(() => {
+    if (loadedRef.current) {
+      return;
+    }
+
+    loadedRef.current = true;
+    const savedHistory = loadHistory();
+
+    if (savedHistory) {
+      setHistory(savedHistory);
+      onLoad(savedHistory);
+    }
+  });
+
+  useEffect(() => {
+    saveHistory(history);
+  }, [history]);
+
+  return [history, setHistory];
+}
+
 function getBgColor(attempt, i) {
   const correctLetter = secret[i];
   const attemptLetter = attempt[i];
 
   if (secret.indexOf(attemptLetter) === -1) {
-    return GRAY;
+    return GREY;
   }
   if (correctLetter === attemptLetter) {
     return GREEN;
   }
 
   return YELLOW;
+}
+
+function calculateBestColors(history) {
+  let map = new Map();
+  for (let attempt of history) {
+    for (let i = 0; i < attempt.length; i++) {
+      let color = getBgColor(attempt, i);
+      let key = attempt[i];
+      let bestColor = map.get(key);
+      map.set(key, getBetterColor(color, bestColor));
+    }
+  }
+  return map;
+}
+
+function getBetterColor(a, b) {
+  if (a === GREEN || b === GREEN) {
+    return GREEN;
+  }
+  if (a === YELLOW || b === YELLOW) {
+    return YELLOW;
+  }
+
+  return GREY;
 }
